@@ -1,0 +1,102 @@
+<?php
+include "koneksi.php";
+
+$search = isset($_GET['search']) ? trim($_GET['search']) : "";
+$search = mysqli_real_escape_string($koneksi, $search);
+
+$where = "";
+if ($search !== "") {
+    $where = "WHERE u.nama LIKE '%$search%'
+              OR b.judul LIKE '%$search%'
+              OR p.status LIKE '%$search%'";
+}
+
+$data = mysqli_query($koneksi, "
+    SELECT p.id_pinjam, p.id_user, u.nama, u.nim,
+           b.judul, p.tanggal_pinjam, p.tanggal_kembali,
+           p.status, p.denda
+    FROM peminjaman p
+    JOIN users u ON p.id_user = u.id_user
+    JOIN buku b ON p.id_buku = b.id_buku
+    $where
+    ORDER BY p.tanggal_pinjam DESC
+");
+?>
+
+<div class="table-responsive">
+<table class="table table-dark table-bordered align-middle">
+<thead>
+<tr>
+    <th>No</th>
+    <th>Nama</th>
+    <th>NIM</th>
+    <th>Buku</th>
+    <th>Pinjam</th>
+    <th>Kembali</th>
+    <th>Status</th>
+    <th>Denda</th>
+    <th>Aksi Buku</th>
+    <th>Aksi Denda</th>
+</tr>
+</thead>
+<tbody>
+
+<?php
+if(mysqli_num_rows($data) == 0){
+    echo "<tr><td colspan='10' class='text-center'>Data tidak ditemukan</td></tr>";
+}
+
+$no = 1;
+while($r = mysqli_fetch_assoc($data)):
+?>
+<tr>
+    <td><?= $no++ ?></td>
+    <td><?= htmlspecialchars($r['nama']) ?></td>
+    <td><?= htmlspecialchars($r['nim']) ?></td>
+    <td><?= htmlspecialchars($r['judul']) ?></td>
+    <td><?= $r['tanggal_pinjam'] ?></td>
+    <td><?= $r['tanggal_kembali'] ?? '-' ?></td>
+    <td>
+        <?php if($r['status']=='dipinjam'): ?>
+            <span class="badge badge-dipinjam">Dipinjam</span>
+        <?php else: ?>
+            <span class="badge badge-kembali">Kembali</span>
+        <?php endif; ?>
+    </td>
+    <td>
+        <?php if($r['denda'] > 0): ?>
+            <span class="text-danger fw-semibold">
+                Rp <?= number_format($r['denda'],0,',','.') ?>
+            </span>
+        <?php else: ?>
+            -
+        <?php endif; ?>
+    </td>
+    <td>
+        <?php if($r['status']=='dipinjam'): ?>
+            <a href="kembali.php?id=<?= $r['id_pinjam'] ?>"
+               class="btn btn-success btn-sm"
+               onclick="return confirm('Kembalikan buku ini?')">
+                Kembalikan
+            </a>
+        <?php else: ?>
+            -
+        <?php endif; ?>
+    </td>
+    <td>
+        <?php if($r['denda'] > 0): ?>
+            <a href="lunas_denda.php?id_user=<?= $r['id_user'] ?>"
+               class="btn btn-warning btn-sm"
+               onclick="return confirm('Lunasi semua denda user ini?')">
+                Lunasi
+            </a>
+        <?php else: ?>
+            -
+        <?php endif; ?>
+    </td>
+</tr>
+<?php endwhile; ?>
+
+</tbody>
+</table>
+</div>
