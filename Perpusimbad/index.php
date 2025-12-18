@@ -183,9 +183,9 @@ a:hover{
                 Login
             </button>
         </form>
-         <p class="link_ganti mt-3">
-    <a href="ganti_password.php" class="link-ganti">
-        Ganti Password
+         <p class="text-end mt-3">
+    <a href="lupa_password.php" class="link-ganti">
+        Lupa Password?
     </a>
 </p>
         <p class="text-center mt-3 mb-2">
